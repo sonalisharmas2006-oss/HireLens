@@ -12,5 +12,14 @@ class User(db.Model):
 
     password = db.Column(db.String(255), nullable=False)
 
-    def __repr__(self):
-        return f"<User {self.name}>"
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.now()
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email
+        }
