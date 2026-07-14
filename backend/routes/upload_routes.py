@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 
 from services.upload_service import save_video
+from services.interview_service import update_video
 
 upload_bp = Blueprint("upload", __name__)
 
@@ -11,17 +12,36 @@ def upload_video():
     if "video" not in request.files:
 
         return jsonify({
-            "message": "No video uploaded"
+            "message": "Video file missing"
+        }), 400
+
+    interview_id = request.form.get("interview_id")
+
+    if not interview_id:
+
+        return jsonify({
+            "message": "Interview ID missing"
         }), 400
 
     video = request.files["video"]
 
-    filename = save_video(video)
+    filepath = save_video(video)
+
+    interview = update_video(
+        interview_id,
+        filepath
+    )
+
+    if interview is None:
+
+        return jsonify({
+            "message": "Interview not found"
+        }), 404
 
     return jsonify({
 
         "message": "Video Uploaded Successfully",
 
-        "filename": filename
+        "interview": interview.to_dict()
 
-    }), 200
+    })

@@ -22,3 +22,17 @@ def get_all_interviews():
 def get_interview(interview_id):
 
     return Interview.query.get(interview_id)
+
+
+def update_video(interview_id, video_path):
+
+    interview = Interview.query.get(interview_id)
+
+    if not interview:
+        return None
+
+    interview.video_path = video_path
+
+    db.session.commit()
+
+    return interview
