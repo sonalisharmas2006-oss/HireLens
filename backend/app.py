@@ -1,39 +1,39 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 
 from config import Config
 from database.db import db
-from services.auth_service import bcrypt
 
 # Blueprints
 from routes.home_routes import home_bp
 from routes.auth_routes import auth_bp
 from routes.interview_routes import interview_bp
-
-# Models
-from models.user import User
-from models.interview import Interview
+from routes.upload_routes import upload_bp
+from routes.report_routes import report_bp
+from routes.chatbot_routes import chatbot_bp
 
 app = Flask(__name__)
-
-# Load configuration
 app.config.from_object(Config)
 
-# Enable CORS
+print("Current Working Directory:", __import__("os").getcwd())
+print("Database URI:", app.config["SQLALCHEMY_DATABASE_URI"])
+
 CORS(app)
 
-# Initialize Extensions
 db.init_app(app)
-bcrypt.init_app(app)
+
+bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-# Register Blueprints
 app.register_blueprint(home_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(interview_bp)
+app.register_blueprint(upload_bp)
+app.register_blueprint(report_bp)
+app.register_blueprint(chatbot_bp)
 
-# Create database tables
 with app.app_context():
     db.create_all()
 

@@ -1,9 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 
-from database.db import db
-from models.user import User
-from services.auth_service import hash_password, check_password
+from services.auth_service import register_user, login_user
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -13,24 +11,20 @@ def register():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({"message": "No data received"}), 400
-
-    if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"message": "Email already exists"}), 400
-
-    new_user = User(
-        name=data["name"],
-        email=data["email"],
-        password=hash_password(data["password"])
+    user = register_user(
+        data["name"],
+        data["email"],
+        data["password"]
     )
 
-    db.session.add(new_user)
-    db.session.commit()
+    if user is None:
+        return jsonify({
+            "message": "Email already exists"
+        }), 400
 
     return jsonify({
         "message": "User registered successfully",
-        "user": new_user.to_dict()
+        "user": user.to_dict()
     }), 201
 
 
@@ -39,16 +33,15 @@ def login():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({"message": "No data received"}), 400
+    user = login_user(
+        data["email"],
+        data["password"]
+    )
 
-    user = User.query.filter_by(email=data["email"]).first()
-
-    if not user:
-        return jsonify({"message": "Invalid Email"}), 401
-
-    if not check_password(user.password, data["password"]):
-        return jsonify({"message": "Invalid Password"}), 401
+    if user is None:
+        return jsonify({
+            "message": "Invalid Email or Password"
+        }), 401
 
     token = create_access_token(identity=str(user.id))
 
