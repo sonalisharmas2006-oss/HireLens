@@ -13,6 +13,8 @@ from routes.interview_routes import interview_bp
 from routes.upload_routes import upload_bp
 from routes.report_routes import report_bp
 from routes.chatbot_routes import chatbot_bp
+from routes.dashboard_routes import dashboard_bp
+from routes.ai_analysis_routes import ai_analysis_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -33,9 +35,12 @@ app.register_blueprint(interview_bp)
 app.register_blueprint(upload_bp)
 app.register_blueprint(report_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(ai_analysis_bp)
 
 with app.app_context():
     db.create_all()
+from models.ai_analysis import AIAnalysis
 
 if __name__ == "__main__":
     app.run(debug=True)

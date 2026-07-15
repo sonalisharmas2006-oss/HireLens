@@ -14,7 +14,13 @@ def create():
 
     data = request.get_json()
 
-    interview = create_interview(data["user_id"])
+    interview = create_interview(
+        user_id=data["user_id"],
+        title=data.get("title", "Mock Interview"),
+        company=data.get("company", "General"),
+        role=data.get("role", "Software Engineer"),
+        interview_type=data.get("interview_type", "Technical")
+    )
 
     return jsonify({
         "message": "Interview Created Successfully",
@@ -23,22 +29,22 @@ def create():
 
 
 @interview_bp.route("/api/interview/all", methods=["GET"])
-def all_interviews():
+def get_all():
 
     interviews = get_all_interviews()
 
-    return jsonify({
-        "count": len(interviews),
-        "interviews": [i.to_dict() for i in interviews]
-    })
+    return jsonify([
+        interview.to_dict()
+        for interview in interviews
+    ])
 
 
-@interview_bp.route("/api/interview/<int:id>", methods=["GET"])
-def one_interview(id):
+@interview_bp.route("/api/interview/<int:interview_id>", methods=["GET"])
+def get_one(interview_id):
 
-    interview = get_interview(id)
+    interview = get_interview(interview_id)
 
-    if not interview:
+    if interview is None:
         return jsonify({
             "message": "Interview Not Found"
         }), 404
