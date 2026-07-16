@@ -11,7 +11,6 @@ def generate_report(interview_id):
     print("Interview ID:", interview_id)
 
     interview = Interview.query.get(interview_id)
-    print("Interview:", interview)
 
     if interview is None:
         print("❌ Interview not found")
@@ -21,8 +20,6 @@ def generate_report(interview_id):
         interview_id=interview_id
     ).first()
 
-    print("Analysis:", analysis)
-
     if analysis is None:
         print("❌ AI Analysis not found")
         return None
@@ -31,19 +28,59 @@ def generate_report(interview_id):
         interview_id=interview_id
     ).first()
 
-    print("Existing Report:", report)
+    feedback = []
+
+    if analysis.confidence_score < 80:
+        feedback.append("• Improve your confidence while answering questions.")
+
+    if analysis.eye_contact_score < 80:
+        feedback.append("• Maintain better eye contact with the interviewer.")
+
+    if analysis.voice_confidence < 80:
+        feedback.append("• Speak louder and more confidently.")
+
+    if analysis.smile_score < 75:
+        feedback.append("• Smile naturally to create a positive impression.")
+
+    if analysis.posture_score < 80:
+        feedback.append("• Maintain an upright posture throughout the interview.")
+
+    if analysis.filler_words > 5:
+        feedback.append("• Reduce filler words like 'um', 'uh', and 'like'.")
+
+    if analysis.speaking_speed < 120:
+        feedback.append("• Try speaking a little faster.")
+
+    if analysis.speaking_speed > 150:
+        feedback.append("• Slow down your speaking speed for better clarity.")
+
+    if len(feedback) == 0:
+        feedback.append(
+            "Excellent interview performance! Keep practicing to maintain consistency."
+        )
 
     suggestions = (
-        f"Overall AI Score: {analysis.overall_score}\n"
+        f"Overall AI Score: {analysis.overall_score}/100\n\n"
+
         f"Emotion: {analysis.emotion}\n"
+
         f"Confidence Score: {analysis.confidence_score}\n"
+
         f"Eye Contact Score: {analysis.eye_contact_score}\n"
+
         f"Voice Confidence: {analysis.voice_confidence}\n"
-        f"Speaking Speed: {analysis.speaking_speed}\n"
+
+        f"Speaking Speed: {analysis.speaking_speed} WPM\n"
+
         f"Filler Words: {analysis.filler_words}\n"
+
         f"Posture Score: {analysis.posture_score}\n"
-        f"Smile Score: {analysis.smile_score}\n"
-        f"Suggestion: Maintain eye contact and avoid filler words."
+
+        f"Smile Score: {analysis.smile_score}\n\n"
+
+        f"Feedback:\n\n"
+
+        + "\n".join(feedback)
     )
 
     if report:
@@ -84,10 +121,6 @@ def generate_report(interview_id):
 
 def get_report(interview_id):
 
-    report = Report.query.filter_by(
+    return Report.query.filter_by(
         interview_id=interview_id
     ).first()
-
-    print("Fetched Report:", report)
-
-    return report

@@ -1,6 +1,10 @@
+from database.db import db
+from sqlalchemy import func
+
 from models.user import User
 from models.interview import Interview
 from models.report import Report
+from models.ai_analysis import AIAnalysis
 
 
 def get_dashboard_stats():
@@ -13,30 +17,51 @@ def get_dashboard_stats():
         status="Completed"
     ).count()
 
-    reports = Report.query.all()
+    pending_interviews = Interview.query.filter(
+        Interview.status != "Completed"
+    ).count()
 
-    if reports:
+    average_confidence = (
+        db.session.query(
+            func.avg(AIAnalysis.confidence_score)
+        ).scalar() or 0
+    )
 
-        scores = [
-            report.confidence_score
-            for report in reports
-        ]
+    average_overall = (
+        db.session.query(
+            func.avg(AIAnalysis.overall_score)
+        ).scalar() or 0
+    )
 
-        average_score = round(
-            sum(scores) / len(scores),
-            2
-        )
-
-        best_score = max(scores)
-
-    else:
-
-        average_score = 0
-        best_score = 0
+    average_voice = (
+        db.session.query(
+            func.avg(AIAnalysis.voice_confidence)
+        ).scalar() or 0
+    )
 
     latest = Interview.query.order_by(
         Interview.created_at.desc()
     ).limit(5).all()
+
+    recent = []
+
+    for interview in latest:
+
+        recent.append({
+
+            "id": interview.id,
+
+            "title": interview.title,
+
+            "company": interview.company,
+
+            "role": interview.role,
+
+            "status": interview.status,
+
+            "created_at": str(interview.created_at)
+
+        })
 
     return {
 
@@ -46,15 +71,14 @@ def get_dashboard_stats():
 
         "completed_interviews": completed_interviews,
 
-        "average_confidence_score": average_score,
+        "pending_interviews": pending_interviews,
 
-        "best_confidence_score": best_score,
+        "average_confidence": round(average_confidence, 2),
 
-        "latest_interviews": [
+        "average_voice_confidence": round(average_voice, 2),
 
-            interview.to_dict()
+        "average_overall_score": round(average_overall, 2),
 
-            for interview in latest
+        "recent_interviews": recent
 
-        ]
     }
